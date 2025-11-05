@@ -5,7 +5,8 @@ const EquipmentSchema = new mongoose.Schema({
       type: String,
       required: true,
       trim: true,
-      lowercase: true
+      lowercase: true,
+      unique: true
    },
    name: {
       type: String,
@@ -56,6 +57,7 @@ const EquipmentSchema = new mongoose.Schema({
     }
 });
 
+EquipmentSchema.index({ name: "text" });
 
 export const Equipment = mongoose.model("Equipment", EquipmentSchema);
 

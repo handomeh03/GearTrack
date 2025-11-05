@@ -1,6 +1,7 @@
 import { User } from "../models/UserModel.js";
 import bcrypte from "bcrypt";
 import { createToken } from "../utils/token/createtoken.js";
+import { AuditLog } from "../models/auditLog.js";
 
 export async function register(req,res) {
     let {fullName,email,password}=req.body;
@@ -50,7 +51,7 @@ export async function login(req,res) {
         //check if the password is correct
         const match=await bcrypte.compare(password,user.password);
         if(!match){
-            res.status(400).send({error:"user not found"});
+          return  res.status(400).send({error:"user not found"});
         }
 
         //generate token and send it
@@ -78,5 +79,23 @@ export async function getMe(req,res) {
   
     return res.status(201).send({user});
     
+}
+
+export async function getAuditLog(req,res) {
+  //for pageanation
+   const page = parseInt(req.query.page) || 1;
+   const limit = parseInt(req.query.limit) || 5;
+
+    try {
+        const auditLog=await AuditLog.find().populate("user","fullName").skip(page-1).limit(limit);
+
+        if(!auditLog){
+            return res.status(400).send({error:"auditLog not found"});
+        }
+        return res.status(201).send(auditLog)
+        
+    } catch (error) {
+        return res.status(500).send({error:error.message});
+    }
 }
 
