@@ -24,10 +24,16 @@ export async function getAllUserAvaible() {
   }
 }
 export async function SendReversationStaff(req, res) {
-  const { id: senderStaffId, email: senderEmail } = req.user; // sender staff
+  const { id: senderStaffId} = req.user; // sender staff
   const { reciverStaffId, date } = req.body; // receiver staff
 
   try {
+
+    // check if sender user is exist
+    const senderUser=await User.findById(senderStaffId);
+    if(!senderUser){
+        return res.status(400).json({ error: "sender user does not exist" });
+    }
     // check if recive staff is exist
     const user = await User.findById(reciverStaffId);
     if (!user) {
@@ -45,7 +51,7 @@ export async function SendReversationStaff(req, res) {
     const staffReservation = await staffReversation.create(newStaffReversation);
 
     // send email to reciver
-    const isSend = await sendEmail(senderEmail, user.email, user.fullName, date);
+    const isSend = await sendEmail(senderUser.email, user.email, user.fullName, date);
 
     if (!isSend) {
       throw new Error("Email could not be sent");

@@ -24,7 +24,7 @@ export async function register(req,res) {
      const user=await User.create(newUser);
 
      // generate token and send as respone
-     const token =createToken(user._id,user.fullName,user.email,user.role,user.status);
+     const token =createToken(user._id);
 
 
     return res.status(201).send({token});
@@ -55,7 +55,7 @@ export async function login(req,res) {
         }
 
         //generate token and send it
-        const token =createToken(user._id,user.fullName,user.email,user.role,user.status);
+        const token =createToken(user._id);
         return res.status(201).send({token});
  
         
@@ -65,19 +65,30 @@ export async function login(req,res) {
 }
 
 export async function getMe(req,res) {
-    let {id,fullName,email,role,status}=req.user;
+    let {id}=req.user;
+    
+    try {
+        let user=await User.findById(id);
+        if(!user){
+            return res.status(400).send({error:"user not found"});
+        }
 
-    // return the data of user 
-
-    const user={
-        id,
-        fullName,
-        email,
-        role,
-        status
+        return res.status(201).send({
+            user:{
+                id:user._id,
+                fullName:user.fullName,
+                email:user.email,
+                role:user.role,
+                status:user.status
+            }
+        })
+        
+    } catch (error) {
+        return res.status(500).send({error:error.message});
     }
-  
-    return res.status(201).send({user});
+    
+
+     
     
 }
 
@@ -98,4 +109,27 @@ export async function getAuditLog(req,res) {
         return res.status(500).send({error:error.message});
     }
 }
+export async function editStatus(req,res) {
+     const {id}=req.user;
+    
+     try {
+        const user=await User.findById(id);
+        
+        let newStatus =!user.status;
 
+        let updatedUser = await User.findByIdAndUpdate( id, { status: newStatus },{ new: true });
+
+        return res.status(200).send({
+            user:{
+                  id: updatedUser._id,
+                  fullName: updatedUser.fullName,
+                  email: updatedUser.email,
+                  role: updatedUser.role,
+                  status: updatedUser.status
+            }
+        })
+        
+     } catch (error) {
+        return res.status(500).send({error:error.message});
+     }
+}
