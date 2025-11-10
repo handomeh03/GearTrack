@@ -28,10 +28,6 @@ const auditLogSchema = new mongoose.Schema({
     type: Object,
     default: null,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+},{ timestamps: true });
 
 export const AuditLog = mongoose.model("AuditLog", auditLogSchema);

@@ -4,11 +4,12 @@ import { registerSchema, registerValid } from "../middleWare/JoiValidation/regis
 import { loginSchema, loginValid } from "../middleWare/JoiValidation/loginValidation.js";
 import { Authorization } from "../middleWare/AuthorizatonMiddleWare/AuthMiddleWare.js";
 import { CheckAdminMiddleware } from "../middleWare/AuthorizatonMiddleWare/CheckAdminMiddleWare.js";
+import { rateLimtLogin } from "../middleWare/RateLimit/LoginRateLimit.js";
 
 export const userRouter=express.Router();
 
 userRouter.post("/register",registerValid(registerSchema),register);
-userRouter.post("/login",loginValid(loginSchema),login);
+userRouter.post("/login",rateLimtLogin,loginValid(loginSchema),login);
 userRouter.get("/me",Authorization,getMe)
 userRouter.get("/getAuditLog",Authorization,CheckAdminMiddleware,getAuditLog);
 userRouter.patch("/editstatus",Authorization,editStatus)

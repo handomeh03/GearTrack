@@ -3,6 +3,7 @@ import bcrypte from "bcrypt";
 import { createToken } from "../utils/token/createtoken.js";
 import { AuditLog } from "../models/auditLog.js";
 
+//for register
 export async function register(req,res) {
     let {fullName,email,password}=req.body;
     //check the input use registerValidation middleWare
@@ -35,7 +36,7 @@ export async function register(req,res) {
     
     
 }
-
+//for login
 export async function login(req,res) {
     let{email,password}=req.body;
     // validate the input using login middleWare
@@ -63,7 +64,7 @@ export async function login(req,res) {
         return res.status(500).send({error:error.message});
     }
 }
-
+// get me from token
 export async function getMe(req,res) {
     let {id}=req.user;
     
@@ -91,7 +92,7 @@ export async function getMe(req,res) {
      
     
 }
-
+//admin can see this auditlog
 export async function getAuditLog(req,res) {
   //for pageanation
    const page = parseInt(req.query.page) || 1;
@@ -109,6 +110,7 @@ export async function getAuditLog(req,res) {
         return res.status(500).send({error:error.message});
     }
 }
+//edit the status of user
 export async function editStatus(req,res) {
      const {id}=req.user;
     

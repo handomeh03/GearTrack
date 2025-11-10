@@ -19,12 +19,9 @@ const ItemReversationSchema=new mongoose.Schema({
     ref:"User",
     required:true
   },
-   createdAt: {
-        type: Date,
-        default: Date.now
-    }
+   
 
-})
+},{ timestamps: true })
 ItemReversationSchema.pre("save", async function(next) {
   const ItemReversationModel = mongoose.model("ItemReversation"); 
   

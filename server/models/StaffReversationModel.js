@@ -15,13 +15,10 @@ const staffReversationSchema=new mongoose.Schema({
           ref: "User",
           required: true
     },
-     createdAt: {
-        type: Date,
-        default: Date.now
-    }
+   
 
 
-});
+},{ timestamps: true });
 staffReversationSchema.pre("save", function (next) {
   const today = new Date();
   today.setHours(0, 0, 0, 0); 
