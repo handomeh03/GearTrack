@@ -23,7 +23,7 @@ const EquipmentSchema = new mongoose.Schema({
    condition: {
       type: String,
       lowercase: true,
-      enum: ["available", "out", "needscharging"],
+      enum: ["available", "out", "overduecharging","needscharging"],
       default:"available"
    },
    location: {
@@ -50,12 +50,8 @@ const EquipmentSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true
-   },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-});
+   }
+},{ timestamps: true });
 
 EquipmentSchema.index({ name: "text" });
 

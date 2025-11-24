@@ -1,7 +1,6 @@
 import mongoose  from "mongoose";
 
 const GuestReversationSchema=new mongoose.Schema({
-
     fullName:{
         type:String,
         required:true,
@@ -32,12 +31,17 @@ const GuestReversationSchema=new mongoose.Schema({
         type:Date,
         required:true,
     },
-     createdAt: {
-        type: Date,
-        default: Date.now
+    staff:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
+    status:{
+        type:String,
+        required:true,
+        enum: ["pending", "assigned", "completed", "cancelled"],
+        default:"pending"
     }
 
-
-})
+},{ timestamps: true })
 
 export const GuestReversation=mongoose.model("GuestReversation",GuestReversationSchema);

@@ -3,6 +3,6 @@ import { Authorization } from "../middleWare/AuthorizatonMiddleWare/AuthMiddleWa
 import { checkStaffMiddleWare } from "../middleWare/AuthorizatonMiddleWare/checkStaffMiddleWare.js";
 import { getAllUserAvaible, SendReversationStaff } from "../Controller/StaffControlller.js";
 export const StaffRouter=express.Router();
-StaffRouter.get("/getAllStaffAvaible",Authorization,checkStaffMiddleWare,getAllUserAvaible);
+StaffRouter.get("/getAllStaffAvaible",Authorization,getAllUserAvaible);
 StaffRouter.post("/sendStaffReversation",Authorization,checkStaffMiddleWare,SendReversationStaff);
 

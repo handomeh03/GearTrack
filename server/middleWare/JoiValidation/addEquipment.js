@@ -50,10 +50,8 @@ export const addEquipmentSchema = joi.object({
     }),
 
   photo: joi.string()
-  .pattern(imagePattern)
   .required()
   .messages({
-    "string.pattern.base": "Photo must be a valid Base64 image string",
     "any.required": "Photo is required"
   })
 

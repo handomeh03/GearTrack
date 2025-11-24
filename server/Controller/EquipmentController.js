@@ -3,6 +3,7 @@ import { Equipment } from "../models/EquipmentModel.js";
 import { ItemReversation } from "../models/ItemReversation.js";
 import { User } from "../models/UserModel.js";
 
+//admin can add item
 export async function addEquipment(req, res) {
   const { id } = req.user;
   const {code,name,category,condition,location,note,purchaseDate,photo, } = req.body;
@@ -45,6 +46,7 @@ export async function addEquipment(req, res) {
   }
 }
 
+//admin can delete item
 export async function DeleteEquipment(req,res) {
     let{id}=req.params;
     let{id:userId}=req.user;
@@ -73,14 +75,12 @@ export async function DeleteEquipment(req,res) {
     }
 }
 
-export async function getAllEquipment(req,res) {
-
-//api/Equipment?page=1&limit=5;
-//for pageanation
-  const page = parseInt(req.query.page) || 1;
+//get all item availble(test it)
+export async function getAvailableEquipment(req,res) {
+   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
     try {
-        //get all Equipment
+        //get all available Equipment
         const Equipments=await Equipment.find({condition:"available"}).skip(page-1).limit(limit);
 
 
@@ -97,10 +97,48 @@ export async function getAllEquipment(req,res) {
     }
 }
 
-export async function editEquipment(req,res) {
-    let{id}=req.params;
-    const {code,name,category,condition,location,note,purchaseDate,photo} = req.body;
+//get all item if with all condtion but if item more than 12 hours need charge put it overdue
+export async function getAllEquipment(req, res) {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
 
+  try {
+    // get all Equipment with pagination
+    const Equipments = await Equipment.find().skip((page - 1) * limit).limit(limit);
+
+    if (Equipments.length === 0) {
+      return res.status(400).send({ error: "No equipment found" });
+    }
+
+
+   //check if item need charge for more 12 hours
+    const now = new Date();
+    for (const e of Equipments) {
+      if (e.condition === "needscharging") {
+        const updatedAt = new Date(e.updatedAt);
+        const diffHours = (now - updatedAt) / (1000 * 60 * 60); 
+
+        if (diffHours >= 12) {
+          await Equipment.findByIdAndUpdate(e._id, {$set: { condition: "overduecharging" }},{new:true});
+          e.condition = "overduecharging"; 
+        }
+      }
+    }
+
+    // send data as respone
+    return res.status(200).send({ Equipments });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+}
+
+//admin can edit
+export async function editEquipment(req,res) {
+    let{equipmentId}=req.params;
+    let{id:userId}=req.user;
+    
+    const {code,name,category,condition,location,note,purchaseDate,photo} = req.body;
+  
 
     // this to choise what you want to edit
     const editEquipments={};
@@ -131,17 +169,18 @@ export async function editEquipment(req,res) {
     try {
         
         //check if Equipment exist
-        const findEquipment=await Equipment.findById(id);
+        const findEquipment=await Equipment.findById(equipmentId);
+        
         if(!findEquipment){
             return res.status(400).send({error:"the Equipment does not exist"});
         }
 
          //updated and send as new one
-        const updatedEquipment = await Equipment.findByIdAndUpdate( id, { $set: editEquipments },{ new: true } );
+        const updatedEquipment = await Equipment.findByIdAndUpdate( equipmentId, { $set: editEquipments },{ new: true } );
 
 
         // auditLog for recourd all action
-        await AuditLog.create({user:id,action:"UPDATE",collectionName:"Equipment",documentId:findEquipment._id,oldData:findEquipment,newData:updatedEquipment});
+        await AuditLog.create({user:userId,action:"UPDATE",collectionName:"Equipment",documentId:findEquipment._id,oldData:findEquipment,newData:updatedEquipment});
 
          return res.status(201).send({updatedEquipment})
         
@@ -151,6 +190,7 @@ export async function editEquipment(req,res) {
 
 }
 
+//admin can serach
 export async function searchEquipment(req, res) {
   const { name } = req.query;
 
@@ -173,6 +213,8 @@ export async function searchEquipment(req, res) {
   }
 }
 
+
+// when staff checkout the item and set item condition out
 export async function checkout(req,res){
   let{id:EquipmentId}=req.params;
   let{id:staffId}=req.user;
@@ -207,11 +249,11 @@ export async function checkout(req,res){
    
 
     // get item reverstaion with the all data and send as respone
-    const item=await ItemReversation.findById(itemReversation._id).populate("equipment","name code condition").populate("user","fullName");
+    const item=await ItemReversation.findById(itemReversation._id).populate("equipment","_id name code condition").populate("user","fullName");
 
 
     //make auditlog
-    await AuditLog.create({user:staffId,action:"CREATE",collectionName:"ItemReversation",documentId:itemReversation._id,newData:itemReversation});
+    await AuditLog.create({user:staffId,action:"UPDATE",collectionName:"ItemReversation",documentId:itemReversation._id,newData:itemReversation});
 
     return res.status(201).send({item});
     
@@ -222,19 +264,19 @@ export async function checkout(req,res){
 
 }
 
+// when staff check in the item and set condition auto Needcharge
 export async function checkin(req,res) {
      let{id}=req.params;
      try {
-
-
       // check if item is exist
       const items=await Equipment.findById(id);
       if(!items){
         return res.status(400).send({error:"Equipment not found"});
       }
-
       // update to needCharge
-      let updateItem=await Equipment.findByIdAndUpdate(id, { $set: { condition:"needscharging" } },{ new: true })
+      let updateItem=await Equipment.findByIdAndUpdate(id, { $set: { condition:"needscharging" } },{ new: true });
+
+      await AuditLog.create({user:id,action:"UPDATE",collectionName:"Equipment",documentId:items._id,newData:updateItem});
 
       // send data as respone
       return res.status(201).send({updateItem});
@@ -244,12 +286,14 @@ export async function checkin(req,res) {
      }
 }
 
+
+//this function to get all items reverstation for one staff
 export async function getAllReversationForOneStaff(req,res) {
    let {id}=req.user;
    try {
 
     //check if the staff have item
-    let items=await ItemReversation.find({user:id}).populate("equipment","code name category condition location note purchaseDate photo");
+    let items=await ItemReversation.find({user:id}).sort({ createdAt: -1 }).populate("equipment","_id code name category condition location note purchaseDate photo").populate("user","_id fullName");
     if(items.length==0){
       return res.status(400).send({error:"there's no item that you check out"});
     }
@@ -260,3 +304,24 @@ export async function getAllReversationForOneStaff(req,res) {
     return res.status(500).send({error:error.message});
    }
 }
+
+
+// this function to change condition when sttaff put the item on charge
+export async function changeStatusItem(req,res) {
+   let{id}=req.params;
+
+   try {
+    let item=await Equipment.findByIdAndUpdate(id,{$set:{condition:"available"}},{new:true});
+    if(!item){
+      return res.status(400).send({error:"item not found"});
+    }
+
+     let itemReversatoin=await ItemReversation.findOneAndDelete({equipment:item._id});
+     
+     return res.status(200).send({measage:"success"});
+    
+   } catch (error) {
+    return res.status(500).send({error:error.message});
+   }
+}
+
