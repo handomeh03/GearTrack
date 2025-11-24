@@ -99,12 +99,12 @@ export async function getAuditLog(req,res) {
    const limit = parseInt(req.query.limit) || 5;
 
     try {
-        const auditLog=await AuditLog.find().populate("user","fullName").skip(page-1).limit(limit);
+        const auditLog=await AuditLog.find().populate("user","fullName").sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit);
 
-        if(!auditLog){
+        if(auditLog.length==0){
             return res.status(400).send({error:"auditLog not found"});
         }
-        return res.status(201).send(auditLog)
+        return res.status(201).send({auditLog})
         
     } catch (error) {
         return res.status(500).send({error:error.message});

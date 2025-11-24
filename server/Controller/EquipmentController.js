@@ -134,9 +134,11 @@ export async function getAllEquipment(req, res) {
 
 //admin can edit
 export async function editEquipment(req,res) {
-    let{id}=req.params;
+    let{equipmentId}=req.params;
+    let{id:userId}=req.user;
+    
     const {code,name,category,condition,location,note,purchaseDate,photo} = req.body;
-
+  
 
     // this to choise what you want to edit
     const editEquipments={};
@@ -167,17 +169,18 @@ export async function editEquipment(req,res) {
     try {
         
         //check if Equipment exist
-        const findEquipment=await Equipment.findById(id);
+        const findEquipment=await Equipment.findById(equipmentId);
+        
         if(!findEquipment){
             return res.status(400).send({error:"the Equipment does not exist"});
         }
 
          //updated and send as new one
-        const updatedEquipment = await Equipment.findByIdAndUpdate( id, { $set: editEquipments },{ new: true } );
+        const updatedEquipment = await Equipment.findByIdAndUpdate( equipmentId, { $set: editEquipments },{ new: true } );
 
 
         // auditLog for recourd all action
-        await AuditLog.create({user:id,action:"UPDATE",collectionName:"Equipment",documentId:findEquipment._id,oldData:findEquipment,newData:updatedEquipment});
+        await AuditLog.create({user:userId,action:"UPDATE",collectionName:"Equipment",documentId:findEquipment._id,oldData:findEquipment,newData:updatedEquipment});
 
          return res.status(201).send({updatedEquipment})
         
@@ -246,11 +249,11 @@ export async function checkout(req,res){
    
 
     // get item reverstaion with the all data and send as respone
-    const item=await ItemReversation.findById(itemReversation._id).populate("equipment","name code condition").populate("user","fullName");
+    const item=await ItemReversation.findById(itemReversation._id).populate("equipment","_id name code condition").populate("user","fullName");
 
 
     //make auditlog
-    await AuditLog.create({user:staffId,action:"CREATE",collectionName:"ItemReversation",documentId:itemReversation._id,newData:itemReversation});
+    await AuditLog.create({user:staffId,action:"UPDATE",collectionName:"ItemReversation",documentId:itemReversation._id,newData:itemReversation});
 
     return res.status(201).send({item});
     
@@ -271,7 +274,9 @@ export async function checkin(req,res) {
         return res.status(400).send({error:"Equipment not found"});
       }
       // update to needCharge
-      let updateItem=await Equipment.findByIdAndUpdate(id, { $set: { condition:"needscharging" } },{ new: true })
+      let updateItem=await Equipment.findByIdAndUpdate(id, { $set: { condition:"needscharging" } },{ new: true });
+
+      await AuditLog.create({user:id,action:"UPDATE",collectionName:"Equipment",documentId:items._id,newData:updateItem});
 
       // send data as respone
       return res.status(201).send({updateItem});
@@ -288,7 +293,7 @@ export async function getAllReversationForOneStaff(req,res) {
    try {
 
     //check if the staff have item
-    let items=await ItemReversation.find({user:id}).populate("equipment","code name category condition location note purchaseDate photo");
+    let items=await ItemReversation.find({user:id}).sort({ createdAt: -1 }).populate("equipment","_id code name category condition location note purchaseDate photo").populate("user","_id fullName");
     if(items.length==0){
       return res.status(400).send({error:"there's no item that you check out"});
     }
@@ -310,7 +315,10 @@ export async function changeStatusItem(req,res) {
     if(!item){
       return res.status(400).send({error:"item not found"});
     }
-    return res.status(201).send({item});
+
+     let itemReversatoin=await ItemReversation.findOneAndDelete({equipment:item._id});
+     
+     return res.status(200).send({measage:"success"});
     
    } catch (error) {
     return res.status(500).send({error:error.message});

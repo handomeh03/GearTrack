@@ -27,7 +27,7 @@ export async function getAllReservePhotoshoot(req, res) {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   try {
-    const reservephotoshoots = await GuestReversation.find().skip(page - 1).limit(limit);
+    const reservephotoshoots = await GuestReversation.find().sort({ createdAt: -1 }).populate("staff","_id fullName");
     if (reservephotoshoot.length == 0) {
       return res.status(404).send({ error: "no reservephotoshoot" });
     }
@@ -54,7 +54,7 @@ export async function assignphotographer(req, res) {
       receiveId,
       { $set: { staff: staffId, status: "assigned" } },
       { new: true }
-    );
+    ).populate("staff","_id fullName");
     if (!updateRecivePhotoShoot) {
       return res.status(404).send({ error: "recive not found" });
     }

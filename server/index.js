@@ -6,6 +6,7 @@ import { EquipmentRouter } from "./Router/EquipmentRouter.js";
 import { StaffRouter } from "./Router/StaffRouter.js";
 import { guestRouter } from "./Router/guestRouter.js";
 import { GlobelLimit } from "./middleWare/RateLimit/GlobelRateLimit.js";
+import cors from "cors";
 dotenv.config();
 const PORT=process.env.PORT || 8080;
 const app=express();
@@ -14,6 +15,12 @@ const app=express();
 //globel MiddleWare
 app.use(express.json());
 app.use(GlobelLimit);
+
+app.use(cors({
+    origin: "http://localhost:4200",
+    methods: "GET,POST,PUT,PATCH,DELETE",
+    credentials: true
+}));
 
 app.use((req,res,next)=>{
   console.log(req.url);

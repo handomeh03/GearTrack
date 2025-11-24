@@ -10,11 +10,14 @@ export const EquipmentRouter=express.Router();
 EquipmentRouter.post("/addEquipment",Authorization,CheckAdminMiddleware,addEquipmentValid(addEquipmentSchema),addEquipment)
 EquipmentRouter.delete("/deleteEquipment/:id",Authorization,CheckAdminMiddleware,DeleteEquipment);
 EquipmentRouter.get("/getAllEquipment",getAllEquipment);
+
 EquipmentRouter.get("/getAvailableEquipment",getAvailableEquipment);
-EquipmentRouter.patch("/editEquipment/:id",Authorization,CheckAdminMiddleware,editEquipment);
+
+EquipmentRouter.patch("/editEquipment/:equipmentId",Authorization,CheckAdminMiddleware,editEquipment);
 EquipmentRouter.get("/searchEquipment",Authorization,CheckAdminMiddleware,searchEquipment);
 
 EquipmentRouter.post("/:id/checkout",Authorization,checkStaffMiddleWare,checkout);
 EquipmentRouter.patch("/:id/checkin",Authorization,checkStaffMiddleWare,checkin);
+
 EquipmentRouter.get("/getAllReversationForOneStaff",Authorization,checkStaffMiddleWare,getAllReversationForOneStaff);
 EquipmentRouter.patch("/changeStatusItem/:id",changeStatusItem)

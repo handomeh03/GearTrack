@@ -12,4 +12,4 @@ userRouter.post("/register",registerValid(registerSchema),register);
 userRouter.post("/login",rateLimtLogin,loginValid(loginSchema),login);
 userRouter.get("/me",Authorization,getMe)
 userRouter.get("/getAuditLog",Authorization,CheckAdminMiddleware,getAuditLog);
-userRouter.patch("/editstatus",Authorization,editStatus)
+userRouter.patch("/editstatus",Authorization,editStatus);
