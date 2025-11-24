@@ -81,7 +81,7 @@ export async function getAvailableEquipment(req,res) {
   const limit = parseInt(req.query.limit) || 5;
     try {
         //get all available Equipment
-        const Equipments=await Equipment.find({condition:"available"}).skip(page-1).limit(limit);
+        const Equipments=await Equipment.find({condition:"available"}).skip((page - 1) * limit).limit(limit);
 
 
         //check if exist 
